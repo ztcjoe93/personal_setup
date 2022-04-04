@@ -1,0 +1,35 @@
+- name: Setup Golang
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - name: get username
+      become: false
+      local_action: command whoami
+      register: local_username
+    - debug:
+        var: local_username
+    - name: Clean-up of golang directory
+      file:
+        state: absent
+        path: /usr/local/go
+    - name: Recreate golang directory
+      file:
+        state: directory
+        path: /usr/local/go
+    - name: Getting Golang 1.18 via wget
+      get_url:
+        url: https://go.dev/dl/go1.18.linux-amd64.tar.gz
+        dest: /usr/local
+    - name: Unpack golang stuff
+      unarchive:  
+        src: /usr/local/go1.18.linux-amd64.tar.gz
+        dest: /usr/local
+    - name: Remove golang package
+      file:
+        state: absent
+        path: /usr/local/go1.18.linux-amd64.tar.gz
+    - name: Add go binary files to local PATH environment variable
+      lineinfile:
+        dest: "/home/{{local_username.stdout}}/.bashrc"
+        line: export PATH=$PATH:/usr/local/go/bin
