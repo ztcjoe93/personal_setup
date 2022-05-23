@@ -1,0 +1,26 @@
+- name: Setup vim and vimplugin 
+  hosts: 127.0.0.1
+  connection: local
+  become: no
+  tasks:
+    - name: get playbook path
+      shell: pwd
+      register: playbook_path
+    - name: get username
+      become: false
+      local_action: command whoami
+      register: local_username
+    - name: copy .vimrc to ~/
+      copy:
+        src: "{{ playbook_path.stdout }}/vimrc_setup"
+        dest: "/home/{{ local_username.stdout }}/.vimrc"
+    - name: create directory for vimplug
+      file:
+        state: directory
+        path: /home/{{ local_username.stdout }}/.vim/autoload
+    - name: curl vimplug
+      get_url: 
+        url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        dest: /home/{{ local_username.stdout }}/.vim/autoload/plug.vim
+    - name: install vimplug
+      shell: vim +'PlugInstall --sync' +qall &> /dev/null < /dev/tty

@@ -1,0 +1,19 @@
+set nocompatible
+filetype plugin indent on
+syntax on
+
+set number
+set tabstop=4
+set softtabstop=0 noexpandtab
+set shiftwidth=4
+
+set omnifunc=syntaxcomplete#Complete
+
+
+call plug#begin('~/.vim/plugged')
+Plug 'morhetz/gruvbox'
+call plug#end()
+silent! colorscheme gruvbox
+set background=dark
+set wildmenu
+set colorcolumn=80
