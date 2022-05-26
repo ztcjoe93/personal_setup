@@ -1,0 +1,15 @@
+- name: Install Golang packages
+  hosts: 127.0.0.1
+  connection: local
+  become: no
+  tasks:
+    - name: Find go
+      shell: "which go"
+      register: go_binaries
+    - name: Install go-outline
+      shell: "{{ go_binaries.stdout }} install -v {{ item }}"
+      with_items: [
+        'github.com/ramya-rao-a/go-outline@latest',
+        'golang.org/x/tools/gopls@latest',
+        'winterdrache.de/goformat/goformat@latest'
+      ]
