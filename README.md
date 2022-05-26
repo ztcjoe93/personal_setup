@@ -19,3 +19,5 @@ $ ansible-playbook <playbook.yml> --ask-become-pass
 
 ## Scripts
 1. Golang setup script (golang_setup.yml)
+2. Golang package installation script (golang_modules.yml)
+3. Vim setup script (vim_setup.yml)
