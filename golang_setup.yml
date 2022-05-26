@@ -17,18 +17,18 @@
       file:
         state: directory
         path: /usr/local/go
-    - name: Getting Golang 1.18 via wget
+    - name: Getting Golang 1.18.2 via wget
       get_url:
-        url: https://go.dev/dl/go1.18.linux-amd64.tar.gz
+        url: https://go.dev/dl/go1.18.2.linux-amd64.tar.gz
         dest: /usr/local
     - name: Unpack golang stuff
       unarchive:  
-        src: /usr/local/go1.18.linux-amd64.tar.gz
+        src: /usr/local/go1.18.2.linux-amd64.tar.gz
         dest: /usr/local
     - name: Remove golang package
       file:
         state: absent
-        path: /usr/local/go1.18.linux-amd64.tar.gz
+        path: /usr/local/go1.18.2.linux-amd64.tar.gz
     - name: Add go binary files to local PATH environment variable
       lineinfile:
         dest: "/home/{{local_username.stdout}}/.bashrc"
