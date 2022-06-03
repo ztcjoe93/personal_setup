@@ -7,8 +7,9 @@
       become: false
       local_action: command whoami
       register: local_username
-    - debug:
-        var: local_username
+    - name: get latest golang filename
+      shell: curl 'https://go.dev/dl/?mode=json' | jq -r '.[0].files[] | select(.filename|test("linux-amd64")).filename'
+      register: golang_ver
     - name: Clean-up of golang directory
       file:
         state: absent
@@ -17,18 +18,18 @@
       file:
         state: directory
         path: /usr/local/go
-    - name: Getting Golang 1.18.2 via wget
+    - name: Getting golang via wget
       get_url:
-        url: https://go.dev/dl/go1.18.2.linux-amd64.tar.gz
+        url: https://go.dev/dl/{{golang_ver.stdout}}
         dest: /usr/local
     - name: Unpack golang stuff
       unarchive:  
-        src: /usr/local/go1.18.2.linux-amd64.tar.gz
+        src: /usr/local/{{golang_ver.stdout}}
         dest: /usr/local
     - name: Remove golang package
       file:
         state: absent
-        path: /usr/local/go1.18.2.linux-amd64.tar.gz
+        path: /usr/local/{{golang_ver.stdout}}
     - name: Add go binary files to local PATH environment variable
       lineinfile:
         dest: "/home/{{local_username.stdout}}/.bashrc"
