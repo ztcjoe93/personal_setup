@@ -11,5 +11,9 @@
       with_items: [
         'github.com/ramya-rao-a/go-outline@latest',
         'golang.org/x/tools/gopls@latest',
-        'winterdrache.de/goformat/goformat@latest'
+        'winterdrache.de/goformat/goformat@latest',
+        'github.com/fatih/gomodifytags@latest',
+        'github.com/josharian/impl@latest',
+        'github.com/go-delve/delve/cmd/dlv@latest',
+        'honnef.co/go/tools/cmd/staticcheck@latest'
       ]
