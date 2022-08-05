@@ -1,0 +1,24 @@
+set nocompatible
+
+filetype plugin indent on 
+syntax on
+
+set number
+set tabstop=4
+set softtabstop=0 noexpandtab
+set shiftwidth=4
+
+call plug#begin("~/.vim/plugged")
+	Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+	Plug 'preservim/nerdtree'
+	Plug 'neoclide/coc.nvim', {'branch': 'release'}
+	Plug 'vim-airline/vim-airline'
+call plug#end()
+
+set wildmenu
+
+map <silent> <F2> :NERDTreeToggle<CR>
+tnoremap <C-h> <C-\><C-n><C-w>h
+tnoremap <C-j> <C-\><C-n><C-w>j
+tnoremap <C-k> <C-\><C-n><C-w>k
+tnoremap <C-l> <C-\><C-n><C-w>l
