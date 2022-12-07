@@ -1,0 +1,29 @@
+- name: Setup latest Terraform
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - name: fetch latest version of terraform 
+      shell:
+        cmd: curl https://releases.hashicorp.com/terraform/ | grep terraform | grep -v alpha | head -1 | sed -n "s/.*\"\/terraform\/\(.*\)\/\".*/\1/p"
+      register: terraform_ver
+
+    - name: remove old terraform from /bin
+      file:
+        state: absent
+        path: /usr/local/bin/terraform
+
+    - name: download terraform package to local instance
+      ansible.builtin.get_url:
+        url: https://releases.hashicorp.com/terraform/{{ terraform_ver.stdout }}/terraform_{{ terraform_ver.stdout }}_linux_amd64.zip
+        dest: /usr/local
+
+    - name: unpack terraform zip
+      ansible.builtin.unarchive:
+        src: /usr/local/terraform_{{ terraform_ver.stdout }}_linux_amd64.zip
+        dest: /usr/local/bin
+      
+    - name: clean-up
+      ansible.builtin.file:
+        state: absent
+        path: /usr/local/terraform_{{ terraform_ver.stdout }}_linux_amd64.zip
