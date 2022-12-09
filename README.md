@@ -23,3 +23,4 @@ $ ansible-playbook <playbook.yml> --ask-become-pass
 3. Golang package installation script (golang_modules.yml)
 4. Vim setup script (vim_setup.yml)
 5. Terraform setup script (terraform_setup.yml)
+6. Docker setup script (docker_setup.yml)

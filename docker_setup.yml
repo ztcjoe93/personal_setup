@@ -1,0 +1,134 @@
+# This ansible script works only on distros that use APT as the package manager
+# Docker repository installation steps are found here: https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+# Convenience script doesn't work for WSL2, life's a bitch
+
+- name: Setup Docker
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - include_vars: setup_vars.yml
+    - name: Checks if docker service exists
+      ansible.builtin.stat:
+        path: /etc/init.d/docker
+      register: service_status
+      tags: uninstall
+
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#parameter-use
+    - name: Stops docker service if active
+      ansible.builtin.service:
+        name: docker
+        state: stopped
+        use: service
+      when:
+        - service_status.stat.exists
+      tags: uninstall
+
+    # https://askubuntu.com/questions/1146634/how-to-remove-docker-from-windows-subsystem
+    - name: Sanity check for docker-ssd.pid (WSL2)
+      ansible.builtin.file:
+        path: /var/run/docker-ssd.pid
+        state: absent
+      tags: uninstall
+
+    - name: Uninstall existing Docker
+      ansible.builtin.apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        purge: true
+        state: absent
+      tags: uninstall
+
+    - name: Clean-up docker group
+      ansible.builtin.group:
+        name: docker
+        state: absent
+      tags: uninstall
+
+    - name: Remove docker package key from PPA
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: absent
+      tags: uninstall
+
+    - name: Clean-up keyring GPG, repository
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/apt/keyrings/docker.gpg
+        - /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+      tags: uninstall
+
+    - name: Clean-up docker images, containers and volumes
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /var/lib/docker
+        - /var/lib/containerd
+      when: 
+        - clean is defined
+        - clean == "yes"
+      tags: uninstall
+
+    - name: Update package index and install packages to use repository over HTTPS
+      ansible.builtin.apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        update_cache: yes
+      tags: install
+
+    - name: Make directory for keyrings if doesn't exist
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      tags: install
+
+    # Here we use shell instead of apt_key as there's a need to dearmor Docker's gpg key
+    # https://www.reddit.com/r/ansible/comments/u2vy26/apt_key/
+    - name: Get APT key
+      ansible.builtin.shell:
+        cmd: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      tags: install
+
+    - name: APT source
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+      tags: install
+
+    - name: Install Docker Engine, containerd, and Docker Compose
+      ansible.builtin.apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        update_cache: yes
+      tags: install
+    
+    - name: Add docker group if it doesn't exist
+      ansible.builtin.group:
+        name: docker
+        state: present
+      tags: post-setup
+
+    - name: Get current user
+      become: false
+      local_action: command whoami
+      register: user
+      tags: post-setup
+
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ user.stdout }}"
+        groups: docker
+        append: yes
+      tags: post-setup
