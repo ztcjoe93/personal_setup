@@ -1,0 +1,25 @@
+- name: Microsoft Visual Studio Code (VSC) installation script
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  tasks:
+    - name: Import MSFT key
+      ansible.builtin.rpm_key:
+        state: present
+        key: https://packages.microsoft.com/keys/microsoft.asc
+    - name: Add VSCode repo to yum
+      ansible.builtin.copy:
+        dest: "/etc/yum.repos.d/vscode.repo"
+        mode: 0644
+        content: |
+          [code]
+          name=Visual Studio Code
+          baseurl=https://packages.microsoft.com/yumrepos/vscode
+          enabled=1
+          gpgcheck=1
+          pgkey=https://packages.microsoft.com/keys/microsoft.asc
+    - name: Update dnf package cache and install
+      ansible.builtin.dnf:
+        name: code
+        state: present
+        update_cache: true
