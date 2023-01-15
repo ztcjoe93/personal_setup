@@ -1,0 +1,44 @@
+- name: Docker setup script
+  hosts: all
+  connection: local
+  become: true
+  tasks:
+    - name: Install dnf-plugins-core
+      ansible.builtin.dnf:
+        name:
+          - dnf-plugins-core
+        state: present
+        update_cache: true
+    - name: Add Docker CE to yum
+      ansible.builtin.copy:
+        dest: "/etc/yum.repos.d/docker-ce.repo"
+        mode: 0644
+        content: |
+          [docker-ce-stable]
+          name=Docker CE Stable - $basearch
+          baseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://download.docker.com/linux/fedora/gpg
+    - name: Install Docker Engine
+      ansible.builtin.dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+    - name: Add docker group
+      ansible.builtin.group:
+        name: docker
+        state: present
+    - name: Add current user to docker group
+      ansible.builtin.user:
+        name: "{{ lookup('env', 'USER') }}"
+        groups: docker
+        append: true
+    - name: Enable Docker service
+      ansible.builtin.systemd:
+        state: started
+        name: docker
